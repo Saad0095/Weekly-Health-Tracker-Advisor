@@ -40,7 +40,24 @@ void mainMenu(int water[], int sleep[], int workout[]) {
   } while (choice != 3);
 }
 
-void inputData(int water[], int sleep[], int workout[]) {}
+void inputData(int water[], int sleep[], int workout[]) {
+	int i;
+	printf("Enter your water intake per day: \n");
+	for(i=0; i<7; i++){
+		printf("Enter intake Day %d: ", i+1);
+		scanf("%d", &water[i]);
+	}
+	printf("Enter hours you sleep per day: \n");
+	for(i=0; i<7; i++){
+		printf("Enter sleep Day %d: ", i+1);
+		scanf("%d", &sleep[i]);
+	}
+	printf("Enter your workout time(in hours): \n");
+	for(i=0; i<7; i++){
+		printf("Enter workout duration Day %d: ", i+1);
+		scanf("%d", &water[i]);
+	}
+}
 void calculateAverages(int water[], int sleep[], int workout[]) {}
 void getAdvise() {}
 void displaySummary() {}
