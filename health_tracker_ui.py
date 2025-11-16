@@ -1,60 +1,19 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 
-# ----------------------------
-# 1️⃣ Page Config and Background
-# ----------------------------
-st.set_page_config(page_title="🌿 Weekly Health Tracker", layout="wide")
-
-# Background image & custom container style
-st.markdown(
-    """
-    <style>
-    /* Full-page background image */
-    .stApp {
-        background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }
-
-    /* Semi-transparent container for content readability */
-    .container {
-        background-color: rgba(255, 255, 255, 0.85);
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-
-    /* Headings style */
-    h1, h2, h3, h4 {
-        color: #0B3D91;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# ----------------------------
-# 2️⃣ Initialize Session State
-# ----------------------------
 if "water" not in st.session_state:
     st.session_state.water = [0.0] * 7
     st.session_state.sleep = [0.0] * 7
     st.session_state.workout = [0.0] * 7
 
-# ----------------------------
-# 3️⃣ Sidebar Menu
-# ----------------------------
+st.set_page_config(page_title="Weekly Health Tracker", layout="wide")
+st.title("🌿 Weekly Health Tracker & Advisor")
+
+# Sidebar menu
 menu = ["Enter/Update Weekly Data", "View Summary & Advice"]
 choice = st.sidebar.selectbox("Menu", menu)
 
-# ----------------------------
-# 4️⃣ Helper Functions
-# ----------------------------
+# Functions
 def calculate_averages():
     avg_water = sum(st.session_state.water) / 7
     avg_sleep = sum(st.session_state.sleep) / 7
@@ -63,31 +22,37 @@ def calculate_averages():
 
 def get_advice(avg_water, avg_sleep, avg_workout):
     advice = []
-    advice.append("💧 " + ("Water intake is good!" if avg_water >= 2.0 else "Increase daily water intake to ~2 liters/day."))
-    advice.append("🛌 " + ("Sleep hours are sufficient!" if avg_sleep >= 8.0 else "Try to get at least 8 hours of sleep daily."))
-    advice.append("🏋️ " + ("Workout routine is good!" if avg_workout >= 0.5 else "Increase workout to at least 30 minutes/day."))
+    if avg_water < 2.0:
+        advice.append("💧 Increase daily water intake to ~2 liters/day.")
+    else:
+        advice.append("💧 Water intake is good!")
+
+    if avg_sleep < 8.0:
+        advice.append("🛌 Try to get at least 8 hours of sleep daily.")
+    else:
+        advice.append("🛌 Sleep hours are sufficient!")
+
+    if avg_workout < 0.5:
+        advice.append("🏋️ Increase workout to at least 30 minutes/day.")
+    else:
+        advice.append("🏋️ Workout routine is good!")
     return advice
+
+def progress_bar(value, goal, label):
+    pct = min(value / goal, 1.0)  
+    if pct < 0.5:
+        color = "🔴"
+    elif pct < 1.0:
+        color = "🟡"
+    else:
+        color = "🟢"
+    st.progress(pct)
+    st.write(f"{label}: {value:.2f} / {goal} {color}")
 
 def has_data():
     return any(v > 0 for v in st.session_state.water + st.session_state.sleep + st.session_state.workout)
 
-def get_color(value, goal):
-    if value < 0.5 * goal:
-        return "red"
-    elif value < goal:
-        return "orange"
-    else:
-        return "green"
-
-# ----------------------------
-# 5️⃣ Main Container Start
-# ----------------------------
-st.markdown('<div class="container">', unsafe_allow_html=True)
-st.title("🌿 Weekly Health Tracker & Dashboard")
-
-# ----------------------------
-# 6️⃣ Option 1: Enter/Update Data
-# ----------------------------
+# Option 1: Enter/Update Data
 if choice == "Enter/Update Weekly Data":
     st.header("📝 Enter Your Weekly Data")
     for i in range(7):
@@ -103,15 +68,12 @@ if choice == "Enter/Update Weekly Data":
         )
     st.success("✅ Weekly data updated!")
 
-# ----------------------------
-# 7️⃣ Option 2: View Summary & Advice
-# ----------------------------
+# Option 2: View Summary & Advice
 elif choice == "View Summary & Advice":
     if not has_data():
         st.warning("⚠️ No data found. Please enter your weekly data first!")
     else:
-        st.header("📊 Weekly Summary Table")
-        # Table
+        st.header("📊 Weekly Summary")
         data = {
             "Water (L/day)": st.session_state.water,
             "Sleep (hrs/day)": st.session_state.sleep,
@@ -120,63 +82,23 @@ elif choice == "View Summary & Advice":
         df = pd.DataFrame(data, index=[f"Day {i+1}" for i in range(7)])
         st.table(df)
 
-        # Averages
+        # Calculate averages
         avg_water, avg_sleep, avg_workout = calculate_averages()
         st.subheader("📈 Averages")
-        st.write(f"💧 Water: {avg_water:.2f} L/day | 🛌 Sleep: {avg_sleep:.2f} hrs/day | 🏋️ Workout: {avg_workout:.2f} hrs/day")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            progress_bar(avg_water, 2.0, "Water")
+        with col2:
+            progress_bar(avg_sleep, 8.0, "Sleep")
+        with col3:
+            progress_bar(avg_workout, 0.5, "Workout")
 
-        # Advice
+        # Display advice
         st.subheader("💡 Health Advice")
         advice = get_advice(avg_water, avg_sleep, avg_workout)
         for a in advice:
             st.write(a)
 
-        # Dashboard: Day-by-Day Bar Chart
-        st.subheader("📊 Daily Performance Dashboard")
-        fig = go.Figure()
-        days = [f"Day {i+1}" for i in range(7)]
-
-        fig.add_trace(go.Bar(
-            x=days,
-            y=st.session_state.water,
-            name='Water (L)',
-            marker_color=[get_color(v, 2.0) for v in st.session_state.water],
-            text=[f"{v:.1f} L" for v in st.session_state.water],
-            textposition='auto'
-        ))
-
-        fig.add_trace(go.Bar(
-            x=days,
-            y=st.session_state.sleep,
-            name='Sleep (hrs)',
-            marker_color=[get_color(v, 8.0) for v in st.session_state.sleep],
-            text=[f"{v:.1f} h" for v in st.session_state.sleep],
-            textposition='auto'
-        ))
-
-        fig.add_trace(go.Bar(
-            x=days,
-            y=st.session_state.workout,
-            name='Workout (hrs)',
-            marker_color=[get_color(v, 0.5) for v in st.session_state.workout],
-            text=[f"{v:.2f} h" for v in st.session_state.workout],
-            textposition='auto'
-        ))
-
-        fig.update_layout(
-            barmode='group',
-            title="Daily Performance vs Goals",
-            yaxis_title="Hours / Liters",
-            xaxis_title="Days",
-            legend_title="Metrics",
-            height=500,
-            plot_bgcolor='rgba(0,0,0,0)',  # transparent background
-            paper_bgcolor='rgba(0,0,0,0)'  # transparent container
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-# ----------------------------
-# 8️⃣ Close container
-# ----------------------------
-st.markdown('</div>', unsafe_allow_html=True)
+        # Weekly trends chart
+        st.subheader("📊 Weekly Trends")
+        st.line_chart(df)
