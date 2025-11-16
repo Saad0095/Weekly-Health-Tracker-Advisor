@@ -102,3 +102,4 @@ elif choice == "View Summary & Advice":
         # Weekly trends chart
         st.subheader("📊 Weekly Trends")
         st.line_chart(df)
+        
