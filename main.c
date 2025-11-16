@@ -1,16 +1,18 @@
 #include <stdio.h>
+
+#define DAYS 7   // <-- Added as requested
+
 void inputData(float water[], float sleep[], float workout[]);
 void calculateAverages(float water[], float sleep[], float workout[],
                        float *avgWater, float *avgSleep, float *avgWorkout);
-void getAdvise(float avgWater, float avgSleep, float avgWorkout);
+void getAdvice(float avgWater, float avgSleep, float avgWorkout);
 void displaySummary(float water[], float sleep[], float workout[],
                     float avgWater, float avgSleep, float avgWorkout);
 void mainMenu(float water[], float sleep[], float workout[]);
 
 int main() {
-  float water[7], sleep[7], workout[7];
+  float water[DAYS], sleep[DAYS], workout[DAYS];
   mainMenu(water, sleep, workout);
-
   return 0;
 }
 
@@ -40,7 +42,7 @@ void mainMenu(float water[], float sleep[], float workout[]) {
         printf("\nNo data found. Please select option 1 first.\n");
       } else {
         displaySummary(water, sleep, workout, avgWater, avgSleep, avgWorkout);
-        getAdvise(avgWater, avgSleep, avgWorkout);
+        getAdvice(avgWater, avgSleep, avgWorkout);
       }
       break;
 
@@ -58,7 +60,7 @@ void mainMenu(float water[], float sleep[], float workout[]) {
 void inputData(float water[], float sleep[], float workout[]) {
   int i;
   printf("\nEnter your water intake per day (in litres): \n");
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < DAYS; i++) {
     printf("\nEnter water intake Day %d: ", i + 1);
     scanf("%f", &water[i]);
     if (water[i] < 0) {
@@ -69,7 +71,7 @@ void inputData(float water[], float sleep[], float workout[]) {
   }
 
   printf("\nEnter hours you sleep per day (in hrs): \n");
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < DAYS; i++) {
     printf("\nEnter sleep Day %d: ", i + 1);
     scanf("%f", &sleep[i]);
     if (sleep[i] < 0 || sleep[i] > 24) {
@@ -80,7 +82,7 @@ void inputData(float water[], float sleep[], float workout[]) {
   }
 
   printf("\nEnter your workout time (in hours): \n");
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < DAYS; i++) {
     printf("\nEnter workout duration Day %d: ", i + 1);
     scanf("%f", &workout[i]);
     if (workout[i] < 0 || workout[i] > 24) {
@@ -95,21 +97,21 @@ void calculateAverages(float water[], float sleep[], float workout[],
                        float *avgWater, float *avgSleep, float *avgWorkout) {
   float sumWater = 0, sumSleep = 0, sumWorkout = 0;
   int i;
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < DAYS; i++) {
     sumWater += water[i];
     sumSleep += sleep[i];
     sumWorkout += workout[i];
   }
-  *avgWater = sumWater / 7.0;
-  *avgSleep = sumSleep / 7.0;
-  *avgWorkout = sumWorkout / 7.0;
+  *avgWater = sumWater / DAYS;
+  *avgSleep = sumSleep / DAYS;
+  *avgWorkout = sumWorkout / DAYS;
 }
 
 void displaySummary(float water[], float sleep[], float workout[],
                     float avgWater, float avgSleep, float avgWorkout) {
   int i;
   printf("\nDays\t\tWater (L/day)\tSleep (hrs/day)\tWorkout (hrs/day)");
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < DAYS; i++) {
     printf("\nDay %d:\t\t%.2f\t\t%.2f\t\t%.2f", i + 1, water[i], sleep[i],
            workout[i]);
   }
@@ -117,7 +119,7 @@ void displaySummary(float water[], float sleep[], float workout[],
          avgWorkout);
 }
 
-void getAdvise(float avgWater, float avgSleep, float avgWorkout) {
+void getAdvice(float avgWater, float avgSleep, float avgWorkout) {
   printf("\n\n\t\t\t\tHealth Advice");
   if (avgWater < 2.0)
     printf("\nIncrease your daily water intake to around 2 liters per day.");
