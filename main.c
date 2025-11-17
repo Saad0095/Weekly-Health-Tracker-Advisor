@@ -69,8 +69,8 @@ void inputData(float water[], float sleep[], float workout[]) {
   for (i = 0; i < DAYS; i++) {
     printf("\nEnter water intake Day %d: ", i + 1);
     scanf("%f", &water[i]);
-    if (water[i] < 0) {
-      printf("Water intake cannot be negative!\n");
+    if (water[i] < 0 || water[i] > 6) {
+      printf("Water intake cannot be negative or more than 6 litres a day!\n");
       i--;
       continue;
     }
@@ -91,8 +91,8 @@ void inputData(float water[], float sleep[], float workout[]) {
   for (i = 0; i < DAYS; i++) {
     printf("\nEnter workout duration Day %d: ", i + 1);
     scanf("%f", &workout[i]);
-    if (workout[i] < 0 || workout[i] > 24) {
-      printf("\n\nEnter hours within 0-24!!");
+    if (workout[i] < 0 || workout[i] > 24 || (24-sleep[i] < workout[i])) {
+      printf("\n\nEnter hours within 0-%.0f!!",(24-sleep[i]));
       i--;
       continue;
     }
