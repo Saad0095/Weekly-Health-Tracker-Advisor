@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+# Initialization
 if "water" not in st.session_state:
     st.session_state.water = [0.0] * 7
     st.session_state.sleep = [0.0] * 7
@@ -9,97 +10,125 @@ if "water" not in st.session_state:
 st.set_page_config(page_title="Weekly Health Tracker", layout="wide")
 st.title("🌿 Weekly Health Tracker & Advisor")
 
-# Sidebar menu
 menu = ["Enter/Update Weekly Data", "View Summary & Advice"]
 choice = st.sidebar.selectbox("Menu", menu)
 
-# Functions
+# calculates averages 
 def calculate_averages():
     avg_water = sum(st.session_state.water) / 7
     avg_sleep = sum(st.session_state.sleep) / 7
     avg_workout = sum(st.session_state.workout) / 7
     return avg_water, avg_sleep, avg_workout
 
+# generates advice
 def get_advice(avg_water, avg_sleep, avg_workout):
     advice = []
+
     if avg_water < 2.0:
-        advice.append("💧 Increase daily water intake to ~2 liters/day.")
+        advice.append("💧 try to drink around 2 liters of water daily.")
     else:
-        advice.append("💧 Water intake is good!")
+        advice.append("💧 good job! your water intake is on track.")
 
     if avg_sleep < 8.0:
-        advice.append("🛌 Try to get at least 8 hours of sleep daily.")
+        advice.append("🛌 aim for at least 8 hours of sleep per day.")
     else:
-        advice.append("🛌 Sleep hours are sufficient!")
+        advice.append("🛌 your sleep routine looks healthy.")
 
     if avg_workout < 0.5:
-        advice.append("🏋️ Increase workout to at least 30 minutes/day.")
+        advice.append("🏋️ try adding around 30 minutes of daily workout.")
     else:
-        advice.append("🏋️ Workout routine is good!")
+        advice.append("🏋️ your workout routine looks good.")
+
     return advice
 
+# Chart/Graphs
 def progress_bar(value, goal, label):
-    pct = min(value / goal, 1.0)  
-    if pct < 0.5:
-        color = "🔴"
-    elif pct < 1.0:
-        color = "🟡"
-    else:
-        color = "🟢"
+    pct = min(value / goal, 1.0)
     st.progress(pct)
-    st.write(f"{label}: {value:.2f} / {goal} {color}")
+    st.write(f"{label}: {value:.2f} / {goal}")
 
+# input validation
 def has_data():
     return any(v > 0 for v in st.session_state.water + st.session_state.sleep + st.session_state.workout)
 
-# Option 1: Enter/Update Data
+
+# ** UI **
+
 if choice == "Enter/Update Weekly Data":
+
     st.header("📝 Enter Your Weekly Data")
+
     for i in range(7):
         st.subheader(f"Day {i+1}")
-        st.session_state.water[i] = st.number_input(
-            f"Water intake (L)", min_value=0.0, value=st.session_state.water[i], step=0.1, key=f"water{i}"
-        )
-        st.session_state.sleep[i] = st.number_input(
-            f"Sleep hours", min_value=0.0, max_value=24.0, value=st.session_state.sleep[i], step=0.5, key=f"sleep{i}"
-        )
-        st.session_state.workout[i] = st.number_input(
-            f"Workout hours", min_value=0.0, max_value=24.0, value=st.session_state.workout[i], step=0.25, key=f"workout{i}"
-        )
-    st.success("✅ Weekly data updated!")
 
-# Option 2: View Summary & Advice
+        water = st.number_input(
+            "Water intake (L)",
+            min_value=0.0,
+            max_value=6.0,
+            value=st.session_state.water[i],
+            step=0.1,
+            key=f"water{i}"
+        )
+        st.session_state.water[i] = water
+
+        sleep = st.number_input(
+            "Sleep hours",
+            min_value=0.0,
+            max_value=24.0,
+            value=st.session_state.sleep[i],
+            step=0.5,
+            key=f"sleep{i}"
+        )
+        st.session_state.sleep[i] = sleep
+
+        max_workout = 24 - sleep
+
+        workout = st.number_input(
+            f"Workout hours (max {max_workout:.1f}h)",
+            min_value=0.0,
+            max_value=float(max_workout),
+            value=st.session_state.workout[i]
+            if st.session_state.workout[i] <= max_workout else 0.0,
+            step=0.25,
+            key=f"workout{i}"
+        )
+        st.session_state.workout[i] = workout
+
+    st.success("✅ weekly data updated!")
+
+
 elif choice == "View Summary & Advice":
+
     if not has_data():
-        st.warning("⚠️ No data found. Please enter your weekly data first!")
+        st.warning("⚠️ no data found. please enter your weekly data first!")
     else:
         st.header("📊 Weekly Summary")
-        data = {
+
+        df = pd.DataFrame({
             "Water (L/day)": st.session_state.water,
             "Sleep (hrs/day)": st.session_state.sleep,
             "Workout (hrs/day)": st.session_state.workout
-        }
-        df = pd.DataFrame(data, index=[f"Day {i+1}" for i in range(7)])
+        }, index=[f"Day {i+1}" for i in range(7)])
+
         st.table(df)
 
-        # Calculate averages
         avg_water, avg_sleep, avg_workout = calculate_averages()
+
         st.subheader("📈 Averages")
         col1, col2, col3 = st.columns(3)
+
         with col1:
             progress_bar(avg_water, 2.0, "Water")
+
         with col2:
             progress_bar(avg_sleep, 8.0, "Sleep")
+
         with col3:
             progress_bar(avg_workout, 0.5, "Workout")
 
-        # Display advice
         st.subheader("💡 Health Advice")
-        advice = get_advice(avg_water, avg_sleep, avg_workout)
-        for a in advice:
-            st.write(a)
+        for line in get_advice(avg_water, avg_sleep, avg_workout):
+            st.write(line)
 
-        # Weekly trends chart
         st.subheader("📊 Weekly Trends")
         st.line_chart(df)
-        
