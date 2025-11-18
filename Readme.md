@@ -60,40 +60,115 @@ The project's modular design, along with core logical reasoning and structured p
 
 ---
 
+## Algorithm
+
+**Start**
+
+1. **Initialize Arrays and Constants:**
+   - Define constant `DAYS = 7` (for a week)
+   - Declare arrays:
+     - `water[DAYS]` stores daily water intake
+     - `sleep[DAYS]` stores daily sleep hours
+     - `workout[DAYS]` stores daily workout hours
+
+2. **Call Main Menu Function:**
+   - Pass water, sleep, and workout arrays to `mainMenu()`
+
+**Main Menu Function:**
+
+3. **Display Menu Options:**
+   - Option 1: Enter/Update Weekly Data
+   - Option 2: View Summary & Advice
+   - Option 3: Exit Program
+
+4. **Input User Choice** (choice)
+
+5. **Decision Based on Choice:**
+   - **If choice = 1:**
+     - Call `inputData()` to take daily inputs
+     - Call `calculateAverages()` to compute weekly averages
+     - Display confirmation message: "Data input completed"
+   - **If choice = 2:**
+     - Check if data exists
+     - If averages are 0, prompt user to enter data first
+     - Else:
+       - Call `displaySummary()` to show daily and average data
+       - Call `getAdvice()` to provide health recommendations
+   - **If choice = 3:**
+     - Exit program with message "Program Exited successfully"
+   - **Else:**
+     - Display "Invalid choice" and prompt again
+
+6. **Repeat Menu** until user chooses option 3
+
+**Input Data Function (inputData):**
+
+7. **For Each Day (1 to 7):**
+   - **Water Intake:**
+     - Input water in liters
+     - Validate: 0 ≤ water ≤ 6
+     - If invalid, prompt again
+   - **Sleep Hours:**
+     - Input sleep hours
+     - Validate: 0 ≤ sleep ≤ 24
+     - If invalid, prompt again
+   - **Workout Hours:**
+     - Input workout hours
+     - Validate: 0 ≤ workout ≤ (24 - sleep)
+     - If invalid, prompt again
+
+**Calculate Averages Function (calculateAverages):**
+
+8. **For Each Day (1 to 7):**
+   - Sum up water, sleep, and workout arrays
+
+9. **Compute Weekly Average:**
+   - `avgWater = totalWater / DAYS`
+   - `avgSleep = totalSleep / DAYS`
+   - `avgWorkout = totalWorkout / DAYS`
+
+**Display Summary Function:**
+
+10. **Print Table:**
+    - Day | Water (L/day) | Sleep (hrs/day) | Workout (hrs/day)
+
+11. **For Each Day:**
+    - Print values of `water[i]`, `sleep[i]`, `workout[i]`
+
+12. **Print Weekly Averages:**
+    - `avgWater`, `avgSleep`, `avgWorkout`
+
+**Get Advice Function (getAdvice):**
+
+13. **Compare Averages and Provide Suggestions:**
+    - **Water:**
+      - If `avgWater < 2.0`, suggest increasing water intake
+      - Else, print "Water intake is good!"
+    - **Sleep:**
+      - If `avgSleep < 8.0`, suggest more sleep
+      - Else, print "Sleep hours sufficient!"
+    - **Workout:**
+      - If `avgWorkout < 0.5`, suggest increasing workout
+      - Else, print "Workout routine is good!"
+
+**End**
+
+---
+
 ## How This Health Tracker Works
 
-This application has two main parts that work together:
+The app has two main parts:
 
-### 1. C Program - The Calculation Engine
+### 1. C Program (The Brain)
+- Handles all the calculations
+- Stores your daily health data
+- Gives basic health advice
+- Works like a simple menu system
 
-The C program handles all the data processing using organized functions:
-
-- **main()** - Starts the program and sets up data storage
-- **mainMenu()** - Shows the main options in a continuous loop:
-  - Option 1: Enter your daily health data
-  - Option 2: View your weekly summary and get advice
-  - Option 3: Exit the program
-- **inputData()** - Collects your daily water intake, sleep hours, and workout time for 7 days with basic validation (no negative numbers, reasonable time ranges)
-- **calculateAverages()** - Calculates weekly averages using pointers to efficiently return multiple values
-- **displaySummary()** - Puts together a neat table so you can see your daily numbers and the weekly averages all in one place
-- **getAdvice()** - Gives you simple tips by checking if your averages hit the healthy targets, like drinking enough water or getting sufficient sleep
-
-### 2. Streamlit Web Interface - The Visual Dashboard
-
-The web app enhances the experience with modern features:
-
-- **Session State** - Remembers your data as you navigate between pages
-- **Sidebar Navigation** - Easy menu access similar to the C program
-- **Smart Input Forms** - Uses number inputs with built-in limits for easier data entry
-- **Enhanced Display:**
-  - Pandas Tables - Shows your data in professional, organized tables
-  - Interactive Charts - Uses Plotly to create bar charts with color coding:
-    - Green = Meeting goals
-    - Orange = Getting close
-    - Red = Needs improvement
-  - Same Smart Advice - Provides the same personalized recommendations as the C version
-
-**The Partnership:** The C program provides the reliable calculation core, while the Streamlit interface delivers a modern, visual experience that makes tracking your health data intuitive and engaging.
+### 2. Streamlit Web App (The Display)
+- Shows your data in pretty tables and graphs
+- Lets you input data easily with sliders and buttons
+- Makes it easy to see your weekly patterns at a glance
 
 ---
 
