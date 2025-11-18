@@ -10,6 +10,7 @@
 - **Course:** CT-175 Programming Fundamentals
 - **Project Type:** Complex Computing Problem (CCP) Report
 - **Submitted To:** Miss Amna
+- **Repository:** [GitHub](https://github.com/Saad0095/Weekly-Health-Tracker-Advisor)
 
 ---
 
