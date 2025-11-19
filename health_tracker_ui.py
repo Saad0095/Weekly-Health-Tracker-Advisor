@@ -1,5 +1,9 @@
 import streamlit as st
 import pandas as pd
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from io import BytesIO
 
 # Initialization
 if "water" not in st.session_state:
@@ -13,55 +17,90 @@ st.title("🌿 Weekly Health Tracker & Advisor")
 menu = ["Enter/Update Weekly Data", "View Summary & Advice"]
 choice = st.sidebar.selectbox("Menu", menu)
 
-# calculates averages 
+# Calculate averages
 def calculate_averages():
     avg_water = sum(st.session_state.water) / 7
     avg_sleep = sum(st.session_state.sleep) / 7
     avg_workout = sum(st.session_state.workout) / 7
     return avg_water, avg_sleep, avg_workout
 
-# generates advice
+# Generate advice 
 def get_advice(avg_water, avg_sleep, avg_workout):
     advice = []
-
     if avg_water < 2.0:
-        advice.append("💧 try to drink around 2 liters of water daily.")
+        advice.append("💧 Try to drink around 2 liters of water daily.")
     else:
-        advice.append("💧 good job! your water intake is on track.")
+        advice.append("💧 Good job! Your water intake is on track.")
 
     if avg_sleep < 8.0:
-        advice.append("🛌 aim for at least 8 hours of sleep per day.")
+        advice.append("🛌 Aim for at least 8 hours of sleep per day.")
     else:
-        advice.append("🛌 your sleep routine looks healthy.")
+        advice.append("🛌 Your sleep routine looks healthy.")
 
     if avg_workout < 0.5:
-        advice.append("🏋️ try adding around 30 minutes of daily workout.")
+        advice.append("🏋️ Try adding around 30 minutes of daily workout.")
     else:
-        advice.append("🏋️ your workout routine looks good.")
+        advice.append("🏋️ Your workout routine looks good.")
 
     return advice
 
-# Chart/Graphs
+# Charts
 def progress_bar(value, goal, label):
     pct = min(value / goal, 1.0)
     st.progress(pct)
     st.write(f"{label}: {value:.2f} / {goal}")
 
-# input validation
 def has_data():
-    return any(v > 0 for v in st.session_state.water + st.session_state.sleep + st.session_state.workout)
+    return any(v > 0 for v in st.session_state.water +
+                         st.session_state.sleep +
+                         st.session_state.workout)
 
+# PDF Report
+def create_pdf(df, avg_water, avg_sleep, avg_workout, advice):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
 
-# ** UI **
+    story.append(Paragraph("Weekly Health Report", styles["Title"]))
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Daily Summary", styles["Heading2"]))
+    table_data = [["Day", "Water (L)", "Sleep (hrs)", "Workout (hrs)"]]
+
+    for i in range(7):
+        table_data.append([
+            f"Day {i+1}",
+            f"{st.session_state.water[i]:.2f}",
+            f"{st.session_state.sleep[i]:.2f}",
+            f"{st.session_state.workout[i]:.2f}"
+        ])
+
+    story.append(Table(table_data))
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Averages", styles["Heading2"]))
+    story.append(Paragraph(f"Water: {avg_water:.2f} L/day", styles["BodyText"]))
+    story.append(Paragraph(f"Sleep: {avg_sleep:.2f} hrs/day", styles["BodyText"]))
+    story.append(Paragraph(f"Workout: {avg_workout:.2f} hrs/day", styles["BodyText"]))
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Health Advice", styles["Heading2"]))
+    for line in advice:
+        story.append(Paragraph(line, styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
 
 if choice == "Enter/Update Weekly Data":
-
     st.header("📝 Enter Your Weekly Data")
 
     for i in range(7):
         st.subheader(f"Day {i+1}")
 
-        water = st.number_input(
+        st.session_state.water[i] = st.number_input(
             "Water intake (L)",
             min_value=0.0,
             max_value=6.0,
@@ -69,9 +108,8 @@ if choice == "Enter/Update Weekly Data":
             step=0.1,
             key=f"water{i}"
         )
-        st.session_state.water[i] = water
 
-        sleep = st.number_input(
+        st.session_state.sleep[i] = st.number_input(
             "Sleep hours",
             min_value=0.0,
             max_value=24.0,
@@ -79,11 +117,10 @@ if choice == "Enter/Update Weekly Data":
             step=0.5,
             key=f"sleep{i}"
         )
-        st.session_state.sleep[i] = sleep
 
-        max_workout = 24 - sleep
+        max_workout = 24 - st.session_state.sleep[i]
 
-        workout = st.number_input(
+        st.session_state.workout[i] = st.number_input(
             f"Workout hours (max {max_workout:.1f}h)",
             min_value=0.0,
             max_value=float(max_workout),
@@ -92,15 +129,14 @@ if choice == "Enter/Update Weekly Data":
             step=0.25,
             key=f"workout{i}"
         )
-        st.session_state.workout[i] = workout
 
-    st.success("✅ weekly data updated!")
+    st.success("✅ Weekly data updated!")
 
 
 elif choice == "View Summary & Advice":
 
     if not has_data():
-        st.warning("⚠️ no data found. please enter your weekly data first!")
+        st.warning("⚠️ No data found. Please enter your weekly data first!")
     else:
         st.header("📊 Weekly Summary")
 
@@ -127,8 +163,19 @@ elif choice == "View Summary & Advice":
             progress_bar(avg_workout, 0.5, "Workout")
 
         st.subheader("💡 Health Advice")
-        for line in get_advice(avg_water, avg_sleep, avg_workout):
+        advice = get_advice(avg_water, avg_sleep, avg_workout)
+        for line in advice:
             st.write(line)
 
         st.subheader("📊 Weekly Trends")
         st.line_chart(df)
+
+        st.subheader("📄 Export Report")
+        pdf_buffer = create_pdf(df, avg_water, avg_sleep, avg_workout, advice)
+
+        st.download_button(
+            label="⬇️ Download Weekly Report (PDF)",
+            data=pdf_buffer,
+            file_name="Weekly_Report.pdf",
+            mime="application/pdf"
+        )
