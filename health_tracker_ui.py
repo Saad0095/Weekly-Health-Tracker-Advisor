@@ -143,6 +143,7 @@ elif choice == "View Summary & Advice":
         )
         week = st.session_state.weekly_records[week_index]
 
+        # Show week data
         st.subheader(f"Week {week_index+1} Summary")
         df = pd.DataFrame({
             "Water (L/day)": week["water"],
@@ -151,8 +152,8 @@ elif choice == "View Summary & Advice":
         }, index=[f"Day {i+1}" for i in range(DAYS)])
         st.table(df)
 
+        # Calculate averages and show advice
         avg_water, avg_sleep, avg_workout = calculate_averages(week)
-
         st.subheader("📈 Averages")
         col1, col2, col3 = st.columns(3)
         with col1: progress_bar(avg_water, 2.0, "Water")
@@ -173,9 +174,15 @@ elif choice == "View Summary & Advice":
             file_name=f"Weekly_Report_Week{week_index+1}.pdf", mime="application/pdf"
         )
 
-# -----------------------
-# Compare Multiple Weeks
-# -----------------------
+        if st.button("🗑️ Delete This Week"):
+            if st.session_state.weekly_records:
+                deleted_week = st.session_state.weekly_records.pop(week_index)
+                with open(DATA_FILE, "w") as f:
+                    json.dump(st.session_state.weekly_records, f)
+                st.info(f"Week {week_index+1} deleted! Please reselect a week.")
+
+# ** Compare Multiple Weeks **
+
 elif choice == "Compare Multiple Weeks":
     if not st.session_state.weekly_records:
         st.warning("⚠️ No records to compare yet!")
