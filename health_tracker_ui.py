@@ -8,15 +8,11 @@ import json
 import os
 import copy
 
-# -----------------------
 # Constants
-# -----------------------
 DATA_FILE = "weekly_records.json"
 DAYS = 7
 
-# -----------------------
 # Initialization
-# -----------------------
 if "current_week" not in st.session_state:
     st.session_state.current_week = {
         "water": [0.0] * DAYS,
@@ -24,7 +20,6 @@ if "current_week" not in st.session_state:
         "workout": [0.0] * DAYS
     }
 
-# Load records from JSON file
 if "weekly_records" not in st.session_state:
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as f:
@@ -38,9 +33,8 @@ st.title("🌿 Weekly Health Tracker & Advisor")
 menu = ["Enter/Update Weekly Data", "View Summary & Advice", "Compare Multiple Weeks"]
 choice = st.sidebar.selectbox("Menu", menu)
 
-# -----------------------
-# Helper Functions
-# -----------------------
+# Other Functions
+
 def calculate_averages(week):
     avg_water = sum(week["water"]) / DAYS
     avg_sleep = sum(week["sleep"]) / DAYS
@@ -94,19 +88,13 @@ def create_pdf(week, avg_water, avg_sleep, avg_workout, advice):
     buffer.seek(0)
     return buffer
 
-def has_data(week):
-    return any(v > 0 for v in week["water"] + week["sleep"] + week["workout"])
-
 def save_week():
-    """Save current week to JSON and session state using deepcopy"""
     st.session_state.weekly_records.append(copy.deepcopy(st.session_state.current_week))
     with open(DATA_FILE, "w") as f:
         json.dump(st.session_state.weekly_records, f)
     st.success(f"✅ Week saved! Total weeks: {len(st.session_state.weekly_records)}")
 
-# -----------------------
-# Enter / Update Weekly Data
-# -----------------------
+# ** Enter / Update Weekly Data **
 if choice == "Enter/Update Weekly Data":
     st.header("📝 Enter Your Weekly Data")
     for i in range(DAYS):
@@ -129,9 +117,7 @@ if choice == "Enter/Update Weekly Data":
     if st.button("💾 Save This Week"):
         save_week()
 
-# -----------------------
-# View Summary & Advice
-# -----------------------
+# ** View Summary & Advice **
 elif choice == "View Summary & Advice":
     if not st.session_state.weekly_records:
         st.warning("⚠️ No weeks recorded yet!")
@@ -143,7 +129,6 @@ elif choice == "View Summary & Advice":
         )
         week = st.session_state.weekly_records[week_index]
 
-        # Show week data
         st.subheader(f"Week {week_index+1} Summary")
         df = pd.DataFrame({
             "Water (L/day)": week["water"],
@@ -152,7 +137,6 @@ elif choice == "View Summary & Advice":
         }, index=[f"Day {i+1}" for i in range(DAYS)])
         st.table(df)
 
-        # Calculate averages and show advice
         avg_water, avg_sleep, avg_workout = calculate_averages(week)
         st.subheader("📈 Averages")
         col1, col2, col3 = st.columns(3)
@@ -176,13 +160,12 @@ elif choice == "View Summary & Advice":
 
         if st.button("🗑️ Delete This Week"):
             if st.session_state.weekly_records:
-                deleted_week = st.session_state.weekly_records.pop(week_index)
+                st.session_state.weekly_records.pop(week_index)
                 with open(DATA_FILE, "w") as f:
                     json.dump(st.session_state.weekly_records, f)
                 st.info(f"Week {week_index+1} deleted! Please reselect a week.")
 
 # ** Compare Multiple Weeks **
-
 elif choice == "Compare Multiple Weeks":
     if not st.session_state.weekly_records:
         st.warning("⚠️ No records to compare yet!")
@@ -192,40 +175,34 @@ elif choice == "Compare Multiple Weeks":
         week_labels = [f"Week {i+1}" for i in range(len(weeks))]
         days_labels = [f"Day {i+1}" for i in range(DAYS)]
 
-        # Water chart
         water_df = pd.DataFrame({week_labels[i]: weeks[i]["water"] for i in range(len(weeks))}, index=days_labels)
         st.subheader("💧 Water Intake Comparison")
         st.line_chart(water_df)
 
-        # Sleep chart
         sleep_df = pd.DataFrame({week_labels[i]: weeks[i]["sleep"] for i in range(len(weeks))}, index=days_labels)
         st.subheader("🛌 Sleep Hours Comparison")
         st.line_chart(sleep_df)
 
-        # Workout chart
         workout_df = pd.DataFrame({week_labels[i]: weeks[i]["workout"] for i in range(len(weeks))}, index=days_labels)
         st.subheader("🏋️ Workout Hours Comparison")
         st.line_chart(workout_df)
 
-        # ----------------- Total Health Score -----------------
         st.subheader("🌟 Total Health Score per Week")
         scores = []
         for week in weeks:
             week_score = 0
             for w, s, e in zip(week["water"], week["sleep"], week["workout"]):
-                # Calculate score as ratio to goal (capped at 1)
                 w_score = min(w / 2.0, 1.0)
                 s_score = min(s / 8.0, 1.0)
                 e_score = min(e / 0.5, 1.0)
                 day_score = (w_score + s_score + e_score) / 3
                 week_score += day_score
-            week_score = (week_score / DAYS) * 100  # convert to percentage
+            week_score = (week_score / DAYS) * 100
             scores.append(round(week_score, 1))
 
         score_df = pd.DataFrame({"Week": week_labels, "Health Score (%)": scores}).set_index("Week")
         st.bar_chart(score_df)
 
-        # Textual advice
         st.subheader("💡 Health Score Advice")
         for i, score in enumerate(scores):
             if score >= 90:
