@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define DAYS 7  // constant
+#define DAYS 7 // constant
 
 void inputData(float water[], float sleep[], float workout[]);
 void calculateAverages(float water[], float sleep[], float workout[],
@@ -9,8 +9,10 @@ void getAdvice(float avgWater, float avgSleep, float avgWorkout);
 void displaySummary(float water[], float sleep[], float workout[],
                     float avgWater, float avgSleep, float avgWorkout);
 void mainMenu(float water[], float sleep[], float workout[]);
+void saveRecord(float water[], float sleep[], float workout[]);
+void viewPastRecords();
 
-// ** Main Function ** 
+// ** Main Function **
 
 int main() {
   float water[DAYS], sleep[DAYS], workout[DAYS];
@@ -18,7 +20,7 @@ int main() {
   return 0;
 }
 
-// ** Main Menu ** 
+// ** Main Menu **
 
 void mainMenu(float water[], float sleep[], float workout[]) {
   int choice;
@@ -28,8 +30,9 @@ void mainMenu(float water[], float sleep[], float workout[]) {
     printf("\n--- Main Menu ---\n");
     printf("1. Enter/Update Weekly Data\n");
     printf("2. View Summary & Advice\n");
-    printf("3. Exit Program\n");
-    printf("Enter your choice (1-3): ");
+    printf("3. View Previous Records\n");
+    printf("4. Exit Program\n");
+    printf("Enter your choice (1-4): ");
     scanf("%d", &choice);
 
     switch (choice) {
@@ -37,6 +40,7 @@ void mainMenu(float water[], float sleep[], float workout[]) {
       inputData(water, sleep, workout);
       calculateAverages(water, sleep, workout, &avgWater, &avgSleep,
                         &avgWorkout);
+      saveRecord(water, sleep, workout);
       printf("\n--- Data Input Completed! ---\n");
       printf("Select option 2 to view the results.\n");
       break;
@@ -51,6 +55,10 @@ void mainMenu(float water[], float sleep[], float workout[]) {
       break;
 
     case 3:
+      viewPastRecords();
+      break;
+
+    case 4:
       printf("\nProgram Exited successfully!\n");
       break;
 
@@ -58,10 +66,10 @@ void mainMenu(float water[], float sleep[], float workout[]) {
       printf("\nInvalid choice. Please enter 1, 2, or 3.\n");
       break;
     }
-  } while(choice != 3);
+  } while (choice != 3);
 }
 
-// ** Take inputs ** 
+// ** Take inputs **
 
 void inputData(float water[], float sleep[], float workout[]) {
   int i;
@@ -91,8 +99,8 @@ void inputData(float water[], float sleep[], float workout[]) {
   for (i = 0; i < DAYS; i++) {
     printf("\nEnter workout duration Day %d: ", i + 1);
     scanf("%f", &workout[i]);
-    if (workout[i] < 0 || workout[i] > 24 || (24-sleep[i] < workout[i])) {
-      printf("\n\nEnter hours within 0-%.0f!!",(24-sleep[i]));
+    if (workout[i] < 0 || workout[i] > 24 || (24 - sleep[i] < workout[i])) {
+      printf("\n\nEnter hours within 0-%.0f!!", (24 - sleep[i]));
       i--;
       continue;
     }
@@ -146,4 +154,44 @@ void getAdvice(float avgWater, float avgSleep, float avgWorkout) {
   else
     printf("\nYour workout routine is good!");
   printf("\n");
+}
+
+// ** Save Record **
+
+void saveRecord(float water[], float sleep[], float workout[]) {
+  FILE *fp = fopen("weekly_records.txt", "a");
+
+  if (fp == NULL) {
+    printf("Unable to save file.\n");
+    return;
+  }
+
+  fprintf(fp, "Start of Week\n");
+
+  for (int i = 0; i < DAYS; i++) {
+    fprintf(fp, "%.2f %.2f %.2f\n", water[i], sleep[i], workout[i]);
+  }
+
+  fprintf(fp, "End of Week\n\n");
+
+  fclose(fp);
+}
+
+// ** View Past Records **
+
+void viewPastRecords() {
+  FILE *fp = fopen("weekly_records.txt", "r");
+  char line[200];
+
+  if(fp == NULL){
+    printf("No records found.\n");
+    return;
+  }
+  
+  while (fgets(line, sizeof(line), fp))
+  {
+    printf("%s", line);
+  }
+  
+  fclose(fp);
 }
